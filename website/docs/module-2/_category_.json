@@ -1,0 +1,8 @@
+{
+  "label": "Module 2: The Digital Twin (Gazebo & Unity)",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "Creating digital twins with Gazebo and Unity for humanoid robotics. This module covers physics simulation, collision detection, rendering techniques, and sensor simulation including LiDAR and IMU sensors for realistic robot testing."
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "label": "Module 3: The AI-Robot Brain (NVIDIA Isaac™)",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "Using NVIDIA Isaac for perception and planning in humanoid robots. This module covers synthetic data generation, visual simultaneous localization and mapping (VSLAM), and navigation path planning with Nav2."
+  }
+}

@@ -1,0 +1,258 @@
+openapi: 3.0.0
+info:
+  title: Intelligence Layer - RAG Backend API
+  description: API for the RAG-powered chatbot backend
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000
+    description: Development server
+  - url: https://api.example.com
+    description: Production server
+
+paths:
+  /api/v1/chat:
+    post:
+      summary: Chat with the Book Expert agent
+      description: Send a message to the RAG-powered chatbot and receive a response
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: Successful response with chat message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      x-code-samples:
+        - lang: curl
+          source: |
+            curl -X POST http://localhost:8000/api/v1/chat \
+              -H "Content-Type: application/json" \
+              -d '{
+                "message": "What is the main concept in chapter 1?",
+                "session_id": "123e4567-e89b-12d3-a456-426614174000",
+                "selected_text": "Optional context from selected text"
+              }'
+
+  /api/v1/ingest:
+    post:
+      summary: Ingest documentation content
+      description: Upload and process documentation files for RAG retrieval
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IngestRequest'
+      responses:
+        '200':
+          description: Successfully ingested content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestResponse'
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/health/ready:
+    get:
+      summary: Health check - Ready status
+      description: Check if the service is ready to handle requests
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '500':
+          description: Service is not ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: The user's message/question
+          example: "What is the main concept in chapter 1?"
+        session_id:
+          type: string
+          format: uuid
+          description: Unique identifier for the chat session
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        selected_text:
+          type: string
+          description: Optional selected text to provide high-priority context
+          example: "This is the selected text that should be given priority in the response"
+        user_id:
+          type: string
+          description: Optional user identifier for authenticated users
+          example: "user123"
+
+    ChatResponse:
+      type: object
+      required:
+        - response
+        - sources
+        - session_id
+      properties:
+        response:
+          type: string
+          description: The AI-generated response to the user's message
+          example: "The main concept in chapter 1 is about..."
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/Source'
+          description: List of sources cited in the response
+        session_id:
+          type: string
+          format: uuid
+          description: The session ID associated with this response
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        message_id:
+          type: string
+          format: uuid
+          description: The ID of the generated message
+          example: "987e6543-e21b-45d3-c876-1234567890ab"
+
+    IngestRequest:
+      type: object
+      required:
+        - source_path
+      properties:
+        source_path:
+          type: string
+          description: Path to the documentation source files to ingest
+          example: "/docs"
+        recursive:
+          type: boolean
+          description: Whether to recursively scan subdirectories
+          default: true
+        file_types:
+          type: array
+          items:
+            type: string
+            enum: [".md", ".mdx"]
+          description: File types to process
+          default: [".md", ".mdx"]
+
+    IngestResponse:
+      type: object
+      required:
+        - status
+        - processed_files
+        - indexed_chunks
+      properties:
+        status:
+          type: string
+          enum: ["success", "partial", "failed"]
+          description: Status of the ingestion process
+        processed_files:
+          type: integer
+          description: Number of files successfully processed
+        indexed_chunks:
+          type: integer
+          description: Number of content chunks successfully indexed
+        errors:
+          type: array
+          items:
+            type: string
+          description: List of errors encountered during ingestion
+
+    Source:
+      type: object
+      required:
+        - title
+        - url
+        - relevance_score
+      properties:
+        title:
+          type: string
+          description: Title of the source document
+          example: "Chapter 1: Introduction to Concepts"
+        url:
+          type: string
+          format: uri
+          description: URL to the original source
+          example: "https://example.com/docs/chapter1"
+        relevance_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Relevance score of this source to the query
+          example: 0.85
+
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: ["ready", "not_ready"]
+          description: Current health status
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp of the health check
+        services:
+          type: object
+          additionalProperties:
+            type: string
+            enum: ["healthy", "unhealthy"]
+          description: Status of dependent services
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Invalid input parameters provided"
+        details:
+          type: object
+          description: Additional error details (optional)

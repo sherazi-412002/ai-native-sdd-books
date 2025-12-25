@@ -1,0 +1,8 @@
+{
+  "label": "Module 1: The Robotic Nervous System (ROS 2)",
+  "position": 1,
+  "link": {
+    "type": "generated-index",
+    "description": "Introduction to ROS 2 fundamentals for autonomous humanoid robotics. This module covers the basic building blocks of robotic systems: nodes, topics, services, and how to bridge different programming languages with rclpy, as well as creating humanoid robot models with URDF."
+  }
+}
